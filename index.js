@@ -16,8 +16,12 @@ function handleStart (req, res, states) {
 }
 
 function handleMove (req, res, states) {
+  const { game, turn, board, you } = JSON.parse(req.body || '{}')
+  console.error({ game, turn, board, you })
+  const moves = ['up', 'down', 'left', 'right']
+  const randomMove = moves[Math.floor(Math.random() * moves.length)]
   res.end(JSON.stringify({
-    move: 'left'
+    move: randomMove
   }))
 }
 
