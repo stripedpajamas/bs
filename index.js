@@ -5,7 +5,7 @@ function handleIndex (req, res) {
   res.end(JSON.stringify({
     apiVersion: '1',
     author: 'stripedpajamas',
-    color: '#ffff00',
+    color: '#2a0080',
     head: 'tongue',
     tail: 'curled'
   }))
