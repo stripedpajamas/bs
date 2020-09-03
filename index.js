@@ -1,6 +1,12 @@
 const { createServer } = require('http')
 const { on } = require('events')
 
+const parseBody = (req) => new Promise((resolve) => {
+  const data = []
+  req.on('data', chunk => { data.push(chunk) })
+  req.on('end', () => { resolve(JSON.parse(data.join(''))) })
+})
+
 function handleIndex (req, res) {
   res.end(JSON.stringify({
     apiVersion: '1',
@@ -15,8 +21,8 @@ function handleStart (req, res, states) {
   res.end()
 }
 
-function handleMove (req, res, states) {
-  const { game, turn, board, you } = JSON.parse(req.body || '{}')
+async function handleMove (req, res, states) {
+  const { game, turn, board, you } = await parseBody(req)
   console.error({ game, turn, board, you })
   const moves = ['up', 'down', 'left', 'right']
   const randomMove = moves[Math.floor(Math.random() * moves.length)]
