@@ -23,7 +23,7 @@ function handleStart (req, res, states) {
 
 async function handleMove (req, res, states) {
   const { game, turn, board, you } = await parseBody(req)
-  console.error({ game, turn, board, you })
+  console.error('Move request game id %s, turn %d', game.id, turn)
 
   // determine possible next spots
   const { head } = you
@@ -33,19 +33,25 @@ async function handleMove (req, res, states) {
     { loc: [head.x, head.y - 1], move: 'down' },
     { loc: [head.x + 1, head.y], move: 'right' },
     { loc: [head.x - 1, head.y], move: 'left' }
-  ].filter(({ loc }) => {
-    const { x, y } = loc
+  ].filter(({ loc, move }) => {
+    const [x, y] = loc
 
     // edges
-    if (x > board.width || x < 0 || y > board.height || y < 0) return false
+    if (x > board.width || x < 0 || y > board.height || y < 0) {
+      console.error({ loc, move }, 'goes off board')
+      return false
+    }
 
     // snakes
     const snakeInTheWay = snakes.some((snake) => {
       const { body } = snake
-      return body.some((bodyPart) => x === bodyPart.x || y === bodyPart.y)
+      return body.some((bodyPart) => x === bodyPart.x && y === bodyPart.y)
     })
 
-    if (snakeInTheWay) return false
+    if (snakeInTheWay) {
+      console.error({ loc, move }, 'bumps into a snake')
+      return false
+    }
 
     return true
   })
