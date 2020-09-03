@@ -21,6 +21,30 @@ function handleStart (req, res, states) {
   res.end()
 }
 
+function isSafe (loc, board) {
+  const [x, y] = loc
+  const { snakes } = board
+  
+  // edges
+  if (x >= board.width || x < 0 || y >= board.height || y < 0) {
+    console.error({ loc }, 'goes off board')
+    return false
+  }
+
+  // snakes
+  const snakeInTheWay = snakes.some((snake) => {
+    const { body } = snake
+    return body.some((bodyPart) => x === bodyPart.x && y === bodyPart.y)
+  })
+
+  if (snakeInTheWay) {
+    console.error({ loc }, 'bumps into a snake')
+    return false
+  }
+
+  return true
+}
+
 async function handleMove (req, res, states) {
   const { game, turn, board, you } = await parseBody(req)
   console.error('Move request game id %s, turn %d; %d x %d board', game.id, turn, board.height, board.width)
@@ -34,24 +58,19 @@ async function handleMove (req, res, states) {
     { loc: [head.x + 1, head.y], move: 'right' },
     { loc: [head.x - 1, head.y], move: 'left' }
   ].filter(({ loc, move }) => {
+    if (!isSafe(loc, board)) return false
+
     const [x, y] = loc
 
-    // edges
-    if (x >= board.width || x < 0 || y >= board.height || y < 0) {
-      console.error({ loc, move }, 'goes off board')
-      return false
-    }
+    // does move have a way out? e.g. am i blocking myself in?
+    const tilesAroundDestination = [
+      [x, y + 1],
+      [x, y - 1],
+      [x + 1, y],
+      [x - 1, y]
+    ]
 
-    // snakes
-    const snakeInTheWay = snakes.some((snake) => {
-      const { body } = snake
-      return body.some((bodyPart) => x === bodyPart.x && y === bodyPart.y)
-    })
-
-    if (snakeInTheWay) {
-      console.error({ loc, move }, 'bumps into a snake')
-      return false
-    }
+    if (!tilesAroundDestination.some((tile) => isSafe(tile, board))) return false
 
     return true
   })
