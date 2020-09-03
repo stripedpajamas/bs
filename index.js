@@ -23,7 +23,7 @@ function handleStart (req, res, states) {
 
 async function handleMove (req, res, states) {
   const { game, turn, board, you } = await parseBody(req)
-  console.error('Move request game id %s, turn %d', game.id, turn)
+  console.error('Move request game id %s, turn %d; %d x %d board', game.id, turn, board.height, board.width)
 
   // determine possible next spots
   const { head } = you
@@ -37,7 +37,7 @@ async function handleMove (req, res, states) {
     const [x, y] = loc
 
     // edges
-    if (x > board.width || x < 0 || y > board.height || y < 0) {
+    if (x >= board.width || x < 0 || y >= board.height || y < 0) {
       console.error({ loc, move }, 'goes off board')
       return false
     }
@@ -55,6 +55,8 @@ async function handleMove (req, res, states) {
 
     return true
   })
+
+  console.error('Next moves', JSON.stringify(nextMoves))
 
   if (nextMoves.length < 1) {
     return res.end(JSON.stringify({ move: 'up', shout: "What's dead may never die" }))
