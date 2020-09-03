@@ -24,11 +24,38 @@ function handleStart (req, res, states) {
 async function handleMove (req, res, states) {
   const { game, turn, board, you } = await parseBody(req)
   console.error({ game, turn, board, you })
-  const moves = ['up', 'down', 'left', 'right']
-  const randomMove = moves[Math.floor(Math.random() * moves.length)]
-  res.end(JSON.stringify({
-    move: randomMove
-  }))
+
+  // determine possible next spots
+  const { head } = you
+  const { snakes } = board
+  const nextMoves = [
+    { loc: [head.x, head.y + 1], move: 'up' },
+    { loc: [head.x, head.y - 1], move: 'down' },
+    { loc: [head.x + 1, head.y], move: 'right' },
+    { loc: [head.x - 1, head.y], move: 'left' }
+  ].filter(({ loc }) => {
+    const { x, y } = loc
+
+    // edges
+    if (x > board.width || x < 0 || y > board.height || y < 0) return false
+
+    // snakes
+    const snakeInTheWay = snakes.some((snake) => {
+      const { body } = snake
+      return body.some((bodyPart) => x === bodyPart.x || y === bodyPart.y)
+    })
+
+    if (snakeInTheWay) return false
+
+    return true
+  })
+
+  if (nextMoves.length < 1) {
+    return res.end(JSON.stringify({ move: 'up', shout: "What's dead may never die" }))
+  }
+
+  const { move } = nextMoves[Math.floor(Math.random() * nextMoves.length)]
+  res.end(JSON.stringify({ move }))
 }
 
 function handleEnd (req, res, states) {
